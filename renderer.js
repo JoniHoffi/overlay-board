@@ -23,7 +23,7 @@ function loadData() {
     if (!loaded[col]) {
       loaded[col] = [];
     } else {
-      loaded[col] = loaded[col].map(t => typeof t === 'string' ? { text: t, description: '' } : t);
+      loaded[col] = loaded[col].map(t => typeof t === 'string' ? { text: t, description: '', project: '' } : t);
     }
   });
 
@@ -66,6 +66,14 @@ function createTaskElement(task, column) {
     detailsPanel.classList.add('visible');
     detailsText.value = task.description || '';
     linkInput.value = task.link || '';
+    const projectField = document.getElementById('task-project');
+    if (projectField) {
+      projectField.value = task.project || '';
+      projectField.oninput = () => {
+        task.project = projectField.value;
+        saveData();
+      };
+    }
     autoResize(detailsText);
     detailsText.oninput = () => {
       task.description = detailsText.value;
@@ -139,13 +147,13 @@ function renderBoard() {
       }
     });
 
-col.appendChild(trash);
+    col.appendChild(trash);
 
     board.appendChild(col);
 
     taskList.addEventListener("dblclick", (e) => {
       if (!e.target.closest('.task')) {
-        boardData[columnName].push({ text: 'New Task', description: '', link: '' });
+        boardData[columnName].push({ text: 'New Task', description: '', link: '', project: currentProject });
         saveData();
         renderBoard();
       }
@@ -175,6 +183,43 @@ col.appendChild(trash);
   if (!activeTaskElement) {
     detailsPanel.classList.add('hidden');
   }
+
+  document.querySelectorAll('.column').forEach(columnEl => {
+  columnEl.addEventListener('dragover', e => {
+    e.preventDefault();
+    columnEl.classList.add('drag-over');
+  });
+
+  columnEl.addEventListener('dragleave', () => {
+    columnEl.classList.remove('drag-over');
+  });
+
+  columnEl.addEventListener('drop', async e => {
+    e.preventDefault();
+    columnEl.classList.remove('drag-over');
+
+    const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+
+    if (!url || !url.startsWith('http')) return;
+
+    const result = await fetchPageTitle(url);
+    const title = result?.title || 'Link';
+    const description = result?.notes || '';
+    const project = result?.meta?.pageSubtitle || '';
+    const columnName = columnEl.querySelector('h2')?.textContent.trim() || 'ToDo';
+
+    const newTask = {
+      text: title,
+      description,
+      link: url,
+      project
+    };
+
+    boardData[columnName].push(newTask);
+    saveData();
+    renderBoard();
+  });
+});
 }
   
 renderBoard();
@@ -199,3 +244,19 @@ document.addEventListener('click', (e) => {
     detailsPanel.classList.remove('visible');
   }
 });
+
+document.getElementById('login-basecamp-btn').addEventListener('click', () => {
+  window.todoAPI.openBasecampLogin();
+});
+
+async function fetchPageTitle(url) {
+  try {
+    console.log("📡 Titel wird angefragt für:", url);
+    const title = await window.todoAPI.fetchTitle(url);
+    console.log("✅ Titel empfangen:", title);
+    return title || 'Link';
+  } catch (err) {
+    console.warn('Fehler beim Titel laden:', err);
+    return 'Link';
+  }
+}

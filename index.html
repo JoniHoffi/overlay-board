@@ -34,6 +34,11 @@
       margin: 0 0 10px;
     }
 
+    .column.drag-over {
+      background-color: rgba(40, 167, 69, 0.1);
+      outline: 2px dashed #28a745;
+    }
+
     .task-list {
       flex: 1;
       display: flex;
@@ -71,7 +76,7 @@
       top: 0;
       height: 100%;
       width: 300px;
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: #222;
       padding: 10px;
       box-sizing: border-box;
       color: white;
@@ -95,7 +100,21 @@
       width: 100%;
     }
 
-„„
+    .trash-zone {
+      border: 2px dashed red;
+      border-radius: 12px;
+      background-color: rgba(255, 0, 0, 0.1);
+      padding: 16px;
+      text-align: center;
+      color: red;
+      font-weight: bold;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+
+    .trash-zone.drag-over {
+      background-color: rgba(255, 0, 0, 0.3);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -103,13 +122,13 @@
   <div id="details-panel" class="">
     <h3>Details</h3>
     <textarea id="details-text"></textarea>
+      <div style="padding-top: 10px; display: flex; align-items: left;">
+        <input id="task-project" type="text" placeholder="Projektname für Task..." style="flex: 1; padding: 5px; background: transparent; color: white; border: 1px solid white;" />
+      </div>
     <div style="display: flex; gap: 5px; margin-top: 10px;">
       <input id="task-link" type="text" placeholder="Link..." style="flex: 1; padding: 5px; background: transparent; color: white; border: 1px solid white;" />
       <button id="open-link-btn" style="padding: 5px; background: green; color: white; border: none; cursor: pointer;">Open</button>
     </div>
-    <button id="delete-task-btn" style="margin-top: 10px; background: red; color: white; border: none; padding: 5px; cursor: pointer;">
-      Delete Task
-    </button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>

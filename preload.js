@@ -43,5 +43,7 @@ contextBridge.exposeInMainWorld('todoAPI', {
   openExternal: (url) => {
     shell.openExternal(url);
   },
-  hideWindow: () => ipcRenderer.send('hide-window')
+  hideWindow: () => ipcRenderer.send('hide-window'),
+  fetchTitle: (url) => ipcRenderer.invoke('fetch-title', url),
+  openBasecampLogin: () => ipcRenderer.send('open-basecamp-login')
 });
