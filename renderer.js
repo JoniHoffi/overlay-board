@@ -7,6 +7,8 @@ const detailsText = document.getElementById('details-text');
 const deleteBtn = document.getElementById('delete-task-btn');
 const linkInput = document.getElementById('task-link');
 const openLinkBtn = document.getElementById('open-link-btn');
+const projectField = document.getElementById('task-project');
+const dueDateField = document.getElementById('task-due-date');
 let activeTaskElement = null;
   
 function loadData() {
@@ -49,6 +51,26 @@ function saveData() {
     console.error('❌ Fehler beim Speichern:', e);
   }
 }
+
+function updateDueClass(div, task) {
+  div.classList.remove('due-today', 'due-warning');
+
+  if (!task.dueDate) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (task.dueDate === today) {
+    div.classList.add('due-today');
+  } else if (task.dueDate < today) {
+    div.classList.add('due-warning');
+  }
+}
+
+function checkDone(div, task) {
+  if (task.done) {
+    div.classList.add('done')
+  }
+}
   
 function createTaskElement(task, column) {
   const div = document.createElement('div');
@@ -59,6 +81,10 @@ function createTaskElement(task, column) {
     task.text = input.value;
     saveData();
   };
+
+  updateDueClass(div, task);
+  checkDone(div, task)
+
   div.appendChild(input);
 
   div.onclick = () => {
@@ -66,7 +92,7 @@ function createTaskElement(task, column) {
     detailsPanel.classList.add('visible');
     detailsText.value = task.description || '';
     linkInput.value = task.link || '';
-    const projectField = document.getElementById('task-project');
+
     if (projectField) {
       projectField.value = task.project || '';
       projectField.oninput = () => {
@@ -74,6 +100,16 @@ function createTaskElement(task, column) {
         saveData();
       };
     }
+
+    if (dueDateField) {
+      dueDateField.value = task.dueDate || null;
+      dueDateField.onchange = () => {
+        task.dueDate = dueDateField.value;
+        updateDueClass(div, task);
+        saveData();
+      }
+    }
+
     autoResize(detailsText);
     detailsText.oninput = () => {
       task.description = detailsText.value;
@@ -108,6 +144,18 @@ function createTaskElement(task, column) {
       }
     };
   };
+
+  div.ondblclick = () => {
+    if (div.classList.contains('done')) {
+      div.classList.remove('done')
+      task.done = false
+      saveData()
+    } else {
+      div.classList.add('done')
+      task.done = true
+      saveData()
+    }
+  }
 
   return div;
 }
@@ -153,7 +201,7 @@ function renderBoard() {
 
     taskList.addEventListener("dblclick", (e) => {
       if (!e.target.closest('.task')) {
-        boardData[columnName].push({ text: 'New Task', description: '', link: '', project: currentProject });
+        boardData[columnName].push({ text: 'New Task', description: '', link: '', project: '', dueDate: null, done: false });
         saveData();
         renderBoard();
       }
@@ -212,7 +260,7 @@ function renderBoard() {
       text: title,
       description,
       link: url,
-      project
+      project,
     };
 
     boardData[columnName].push(newTask);

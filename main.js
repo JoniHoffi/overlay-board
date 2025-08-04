@@ -1,6 +1,7 @@
 const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 const AutoLaunch = require('auto-launch');
+const { autoUpdater } = require('electron-updater');
 const { screen } = require('electron');
 const { Menu } = require('electron');
 
@@ -144,6 +145,8 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 const menuTemplate = [
@@ -177,6 +180,12 @@ const menuTemplate = [
       },
       { type: 'separator' },
       {
+        label: 'Nach Updates suchen',
+        click: () => {
+          autoUpdater.checkForUpdatesAndNotify();
+        }
+      },
+      {
         role: 'quit',
         label: 'Beenden'
       }
@@ -194,6 +203,14 @@ const menuTemplate = [
       { role: 'pasteAndMatchStyle' },
       { role: 'delete' },
       { role: 'selectAll' }
+    ]
+  },
+  {
+    label: 'Entwicklung',
+    submenu: [
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' }
     ]
   }
 ];

@@ -115,6 +115,32 @@
       background-color: rgba(255, 0, 0, 0.3);
       transform: scale(1.05);
     }
+
+    .due-today {
+      background-color: yellow;
+    }
+
+    .due-today input {
+      color: black
+    }
+
+    .due-warning {
+      background-color: red;
+    }
+
+    .done {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: line-through;
+      order: 1;
+    }
+
+    .done input {
+      text-decoration: line-through;
+      pointer-events: none;
+      opacity: 0.6;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -122,9 +148,12 @@
   <div id="details-panel" class="">
     <h3>Details</h3>
     <textarea id="details-text"></textarea>
-      <div style="padding-top: 10px; display: flex; align-items: left;">
-        <input id="task-project" type="text" placeholder="Projektname für Task..." style="flex: 1; padding: 5px; background: transparent; color: white; border: 1px solid white;" />
-      </div>
+    <div style="padding-top: 10px; display: flex; align-items: left;">
+      <input id="task-project" type="text" placeholder="Projektname für Task..." style="flex: 1; padding: 5px; background: transparent; color: white; border: 1px solid white;" />
+    </div>
+    <div style="padding-top: 10px; display: flex; align-items: left;">
+      <input id="task-due-date" type="date" style="flex: 1; padding: 5px; background: transparent; color: white; border: 1px solid white;" />
+    </div>
     <div style="display: flex; gap: 5px; margin-top: 10px;">
       <input id="task-link" type="text" placeholder="Link..." style="flex: 1; padding: 5px; background: transparent; color: white; border: 1px solid white;" />
       <button id="open-link-btn" style="padding: 5px; background: green; color: white; border: none; cursor: pointer;">Open</button>

@@ -2,14 +2,33 @@
   "name": "overlay-board",
   "version": "1.0.0",
   "main": "main.js",
+  "description": "Overlay ToDo application",
+  "author": "Jonas",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "publish": "DEBUG=electron-builder npx electron-builder --mac --arm64 --publish always"
   },
   "devDependencies": {
     "electron": "^29.0.0",
+    "electron-builder": "^26.0.12",
     "electron-packager": "^17.1.2"
   },
   "dependencies": {
-    "auto-launch": "^5.0.6"
+    "auto-launch": "^5.0.6",
+    "electron-updater": "^6.6.2"
+  },
+  "build": {
+    "asar": true,
+    "files": [
+      "!**/*.map"
+    ],
+    "appId": "de.jonas.overlayboard",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "JoniHoffi",
+        "repo": "overlay-board"
+      }
+    ]
   }
 }

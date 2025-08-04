@@ -1,1 +1,6 @@
 node_modules/
+overlay-board-darwin-universal/
+.env
+.env.local
+dist/
+.DS_Store
