@@ -2,8 +2,9 @@ name: Build and Publish Electron App
 
 on:
   push:
-    tags:
-      - 'v*'  # nur wenn du z. B. v1.0.0 taggst
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build-mac:
