@@ -146,7 +146,7 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
-  autoUpdater.checkForUpdatesAndNotify();
+  //autoUpdater.checkForUpdatesAndNotify();
 });
 
 const menuTemplate = [
@@ -154,7 +154,7 @@ const menuTemplate = [
     label: 'Overlay Board',
     submenu: [
       {
-        label: 'Basecamp Login',
+        label: 'Basecamp-Login',
         click: () => {
           // Starte Login-Fenster
           const loginWin = new BrowserWindow({

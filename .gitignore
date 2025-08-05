@@ -4,3 +4,5 @@ overlay-board-darwin-universal/
 .env.local
 dist/
 .DS_Store
+build/
+.env.mac-signing
