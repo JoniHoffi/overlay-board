@@ -146,7 +146,7 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
-  //autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 const menuTemplate = [
