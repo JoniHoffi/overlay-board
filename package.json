@@ -1,12 +1,12 @@
 {
   "name": "overlay-board",
-  "version": "1.0.2",
+  "version": "1.0.7",
   "main": "main.js",
   "description": "Overlay ToDo application",
   "author": "Jonas",
   "scripts": {
     "start": "electron .",
-    "publish": "DEBUG=electron-builder,electron-notarize npx electron-builder --mac --arm64 --publish always"
+    "publish": "DEBUG=electron-builder,electron-notarize npx electron-builder --mac --universal --publish always"
   },
   "devDependencies": {
     "electron": "^37.2.5",
@@ -21,6 +21,12 @@
   "build": {
     "files": [
       "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "build/tray",
+        "to": "assets/tray"
+      }
     ],
     "appId": "de.jonas.overlayboard",
     "mac": {
