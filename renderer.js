@@ -1,6 +1,6 @@
-const CONFIG = loadSetting();
-  
-let boardData = loadData();
+let CONFIG;
+let boardData;
+
 const board = document.getElementById('board');
 const detailsPanel = document.getElementById('details-panel');
 const detailsText = document.getElementById('details-text');
@@ -10,8 +10,16 @@ const openLinkBtn = document.getElementById('open-link-btn');
 const projectField = document.getElementById('task-project');
 const dueDateField = document.getElementById('task-due-date');
 let activeTaskElement = null;
-  
-function loadData() {
+
+async function init() {
+  CONFIG = await window.settings.get();
+  boardData = await loadData();
+  renderBoard();
+}
+
+init();
+
+async function loadData() {
   let loaded = {};
   try {
     loaded = window.todoAPI.load();
@@ -32,15 +40,13 @@ function loadData() {
   return loaded;
 }
 
-function loadSetting() {
-  let setting = {};
+async function loadSetting() {
   try {
-    setting = window.todoAPI.loadSetting();
+    return await window.settings.get();
   } catch (e) {
     console.error('❌ Fehler beim Laden der Einstellungen:', e);
+    return {};
   }
-
-  return setting;
 }
   
 function saveData() {
@@ -161,6 +167,10 @@ function createTaskElement(task, column) {
 }
   
 function renderBoard() {
+  if (!CONFIG || !Array.isArray(CONFIG.columns)) {
+    console.warn('renderBoard: CONFIG/columns noch nicht verfügbar – warte auf init');
+    return;
+  }
   board.innerHTML = '';
   CONFIG.columns.forEach(columnName => {
     const tasks = boardData[columnName] || [];
@@ -270,9 +280,40 @@ function renderBoard() {
 });
 }
   
-renderBoard();
-  
+
+if (window.settingsEvents?.onUpdated) {
+  window.settingsEvents.onUpdated((next) => {
+    // Falls Spalten sich geändert haben, passe boardData-Keys an
+    if (Array.isArray(next.columns)) {
+      const nextData = {};
+      next.columns.forEach(col => {
+        nextData[col] = boardData[col] || [];
+      });
+      boardData = nextData;
+      CONFIG.columns = next.columns;
+      renderBoard();
+    }
+  });
+}
+
 document.addEventListener('keydown', (e) => {
+  if (e.metaKey && (e.key === 'Backspace' || e.key === 'Delete')) {
+    e.preventDefault();
+
+    if (activeTaskElement) {
+      const columnName = activeTaskElement.closest('.column').querySelector('h2').textContent;
+      const taskIndex = Array.from(activeTaskElement.parentNode.children).indexOf(activeTaskElement);
+
+      if (taskIndex > -1) {
+        boardData[columnName].splice(taskIndex, 1);
+        activeTaskElement = null;
+        saveData();
+        renderBoard();
+        detailsPanel.classList.remove('visible');
+      }
+    }
+  }
+
   if (e.key === 'Escape') {
     window.todoAPI.hideWindow?.();
   }
