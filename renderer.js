@@ -151,17 +151,12 @@ function createTaskElement(task, column) {
     };
   };
 
-  div.ondblclick = () => {
-    if (div.classList.contains('done')) {
-      div.classList.remove('done')
-      task.done = false
-      saveData()
-    } else {
-      div.classList.add('done')
-      task.done = true
-      saveData()
-    }
-  }
+  div.addEventListener('mouseenter', () => {
+    div.isHovered = true;
+  });
+  div.addEventListener('mouseleave', () => {
+    div.isHovered = false;
+  });
 
   return div;
 }
@@ -211,7 +206,7 @@ function renderBoard() {
 
     taskList.addEventListener("dblclick", (e) => {
       if (!e.target.closest('.task')) {
-        boardData[columnName].push({ text: 'New Task', description: '', link: '', project: '', dueDate: null, done: false });
+        boardData[columnName].push({ text: 'New Task', description: '', link: '', project: '', dueDate: null, done: false});
         saveData();
         renderBoard();
       }
@@ -310,6 +305,54 @@ document.addEventListener('keydown', (e) => {
         saveData();
         renderBoard();
         detailsPanel.classList.remove('visible');
+      }
+    }
+  }
+
+  if (e.metaKey && e.key.toLowerCase() === 'd') {
+    const hoveredTask = document.querySelector('.task:hover');
+    if (hoveredTask) {
+      const columnName = hoveredTask.closest('.column').querySelector('h2').textContent;
+      const taskIndex = Array.from(hoveredTask.parentNode.children).indexOf(hoveredTask);
+      const task = boardData[columnName][taskIndex];
+      if (hoveredTask.classList.contains('done')) {
+        hoveredTask.classList.remove('done');
+        task.done = false;
+      } else {
+        hoveredTask.classList.add('done');
+        task.done = true;
+      }
+      saveData();
+    }
+  }
+
+  if (e.key === 'ArrowDown') {
+    if (activeTaskElement) {
+      const columnEl = activeTaskElement.closest('.column');
+      const tasks = Array.from(columnEl.querySelectorAll('.task'));
+      const currentIndex = tasks.indexOf(activeTaskElement);
+
+      if (currentIndex < tasks.length - 1) {
+        const nextTask = tasks[currentIndex + 1];
+        nextTask.click();
+        const input = nextTask.querySelector('input');
+        if (input) input.focus();
+      }
+    }
+  }
+
+  if (e.key === 'ArrowUp') {
+    if (activeTaskElement) {
+      const columnEl = activeTaskElement.closest('.column');
+      const tasks = Array.from(columnEl.querySelectorAll('.task'));
+      const currentIndex = tasks.indexOf(activeTaskElement);
+
+      if (currentIndex != 0) {
+        const nextTask = tasks[currentIndex - 1];
+        nextTask.click();
+        
+        const input = nextTask.querySelector('input');
+        if (input) input.focus();
       }
     }
   }

@@ -1,6 +1,6 @@
 {
   "name": "overlay-board",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "main.js",
   "description": "Overlay ToDo application",
   "author": "Jonas",
