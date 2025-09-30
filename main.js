@@ -1,9 +1,14 @@
-const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain, Tray, nativeImage } = require('electron');
 const path = require('path');
 const AutoLaunch = require('auto-launch');
 const { autoUpdater } = require('electron-updater');
 const { screen } = require('electron');
 const { Menu } = require('electron');
+const { readSettings } = require('./settings');
+
+ipcMain.handle('settings:userDataPath', () => {
+  return app.getPath('userData');
+});
 
 ipcMain.handle('fetch-title', async (event, url) => {
   console.log("🌐 Hauptprozess ruft Titel & Infos ab für:", url);
@@ -86,6 +91,15 @@ const overlayAutoLauncher = new AutoLaunch({
 overlayAutoLauncher.enable().catch(() => {});
 
 let mainWindow;
+let tray;
+let settingsWindow;
+
+function getAssetPath(...paths) {
+  const base = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, 'build');
+  return path.join(base, ...paths);
+}
 
 function repositionWindowToCursor() {
   const mousePosition = screen.getCursorScreenPoint();
@@ -97,7 +111,39 @@ function repositionWindowToCursor() {
   }
 }
 
-function createWindow() {
+function createSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    return;
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 600,
+    height: 700,
+    resizable: true,
+    minimizable: false,
+    maximizable: false,
+    show: true,
+    title: 'Einstellungen',
+    parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
+    modal: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
+    }
+  });
+
+  settingsWindow.loadFile('setting.html');
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+  });
+}
+
+async function createWindow() {
   const mousePosition = screen.getCursorScreenPoint();
   const display = screen.getDisplayNearestPoint(mousePosition);
 
@@ -131,7 +177,8 @@ function createWindow() {
     if (mainWindow) mainWindow.hide();
   });
 
-  globalShortcut.register('CommandOrControl+Shift+T', () => {
+  settings = await readSettings();
+  globalShortcut.register(settings.openHotkey, () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
     } else {
@@ -143,8 +190,29 @@ function createWindow() {
   mainWindow.setIgnoreMouseEvents(false);
 }
 
+function createTrayWindow() {
+  const trayIconName = process.platform === 'darwin'
+    ? 'icon.png'
+    : (process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+
+  const trayIconPath = getAssetPath('tray', trayIconName);
+  const trayImage = nativeImage.createFromPath(trayIconPath);
+  tray = new Tray(trayImage);
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'Öffnen', click: () => mainWindow.show() },
+    { label: 'Einstellungen…', click: () => createSettingsWindow() },
+    { type: 'separator' },
+    { label: 'Beenden', click: () => app.quit() }
+  ]);
+  tray.setToolTip('overlay-board');
+  tray.setContextMenu(contextMenu);
+}
+
+app.dock.hide();
+
 app.whenReady().then(() => {
   createWindow();
+  createTrayWindow();
 
   autoUpdater.checkForUpdatesAndNotify();
 });
@@ -153,6 +221,10 @@ const menuTemplate = [
   {
     label: 'Overlay Board',
     submenu: [
+      {
+        label: 'Einstellungen…',
+        click: () => createSettingsWindow()
+      },
       {
         label: 'Basecamp-Login',
         click: () => {
@@ -173,7 +245,32 @@ const menuTemplate = [
             const currentUrl = loginWin.webContents.getURL();
             if (currentUrl.includes('/my')) {
               console.log("✅ Basecamp erfolgreich geladen:", currentUrl);
-              // Optional: loginWin.close();
+              loginWin.close();
+            }
+          });
+        }
+      },
+      {
+        label: 'Redmine-Login',
+        click: () => {
+          // Starte Login-Fenster
+          const loginWin = new BrowserWindow({
+            width: 1000,
+            height: 800,
+            show: true,
+            webPreferences: {
+              nodeIntegration: false,
+              contextIsolation: true
+            }
+          });
+
+          loginWin.loadURL('https://ticket.dav-summit-club.de/login');
+
+          loginWin.webContents.on('did-finish-load', async () => {
+            const currentUrl = loginWin.webContents.getURL();
+            if (currentUrl.includes('/my')) {
+              console.log("✅ Redmine erfolgreich geladen:", currentUrl);
+              loginWin.close();
             }
           });
         }
@@ -210,7 +307,10 @@ const menuTemplate = [
     submenu: [
       { role: 'reload' },
       { role: 'forceReload' },
-      { role: 'toggleDevTools' }
+      { 
+        role: 'toggleDevTools',
+        accelerator: 'CmdOrCtrl+Shift+I',
+      }
     ]
   }
 ];

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Overlay Board — Einstellungen</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      background-color: #121212;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: #fff;
+    }
+    header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    main {
+      padding: 20px;
+      max-width: 800px;
+    }
+    .group { margin-bottom: 24px; }
+    .group h2 { margin: 0 0 8px; font-size: 16px; opacity: 0.9; }
+    .row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    label { min-width: 220px; opacity: 0.9; }
+    input[type="text"], input[type="number"], select {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+    input[type="checkbox"] { transform: scale(1.2); }
+    .actions { display: flex; gap: 10px; margin-top: 24px; }
+    button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      cursor: pointer;
+    }
+    button.primary { background: #2e7d32; border-color: #2e7d32; }
+    .hint { opacity: 0.7; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0">Einstellungen</h1>
+    <p class="hint">Passe Overlay Board nach deinen Wünschen an.</p>
+  </header>
+  <main>
+    <div class="group">
+      <h2>Shortcuts</h2>
+      <div class="row">
+        <label for="openHotkey">Overlay öffnen</label>
+        <input id="openHotkey" type="text" placeholder="z. B. Cmd+Shift+T" />
+      </div>
+      <div class="row">
+        <label for="deleteHotkey">Task löschen</label>
+        <input id="deleteHotkey" type="text" placeholder="z. B. Cmd+Delete" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Spalten</h2>
+      <p class="hint">Reihenfolge und Namen anpassen. Jede Zeile = eine Spalte.</p>
+      <div class="row" style="align-items: stretch;">
+        <textarea id="columns" rows="8" style="flex:1; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; white-space: pre; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;"></textarea>
+      </div>
+      <div class="row">
+        <button id="addColumnBtn">+ Spalte hinzufügen</button>
+        <button id="resetColumnsBtn">Standardspalten</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="saveBtn" class="primary">Speichern</button>
+      <button id="resetBtn">Alle Einstellungen zurücksetzen</button>
+    </div>
+  </main>
+
+  <script>
+    const api = window.settings;
+
+    async function loadSettings() {
+      const s = await api.get();
+      document.getElementById('openHotkey').value = s.openHotkey || 'Cmd+Shift+T';
+      document.getElementById('deleteHotkey').value = s.deleteHotkey || 'Cmd+Delete';
+      const cols = Array.isArray(s.columns) ? s.columns : ["To-Do", "PRIO", "In Progress", "Waiting", "Done"];
+      document.getElementById('columns').value = cols.join('\n');
+    }
+
+    async function saveSettings() {
+      const openHotkey = document.getElementById('openHotkey').value.trim() || 'Cmd+Shift+T';
+      const deleteHotkey = document.getElementById('deleteHotkey').value.trim() || 'Cmd+Delete';
+      const rawCols = document.getElementById('columns').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const columns = rawCols.length ? rawCols : ["To-Do", "PRIO", "In Progress", "Waiting", "Done"];
+
+      await api.set({ openHotkey, deleteHotkey, columns });
+
+      const btn = document.getElementById('saveBtn');
+      const old = btn.textContent;
+      btn.textContent = 'Gespeichert ✓';
+      setTimeout(() => (btn.textContent = old), 1200);
+    }
+
+    async function resetSettings() {
+      await api.set({
+        openHotkey: 'Cmd+Shift+T',
+        deleteHotkey: 'Cmd+Delete',
+        columns: ["To-Do", "PRIO", "In Progress", "Waiting", "Done"]
+      });
+      await loadSettings();
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', saveSettings);
+    document.getElementById('resetBtn').addEventListener('click', resetSettings);
+
+    document.getElementById('addColumnBtn').addEventListener('click', () => {
+      const ta = document.getElementById('columns');
+      ta.value = (ta.value ? ta.value + '\n' : '') + 'Neue Spalte';
+      ta.focus();
+    });
+
+    document.getElementById('resetColumnsBtn').addEventListener('click', () => {
+      document.getElementById('columns').value = ["To-Do", "PRIO", "In Progress", "Waiting", "Done"].join('\n');
+    });
+
+    loadSettings();
+  </script>
+</body>
+</html>
